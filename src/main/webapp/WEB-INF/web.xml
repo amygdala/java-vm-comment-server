@@ -38,6 +38,15 @@
       <url-pattern>/comment/*</url-pattern>
   </servlet-mapping>
 
+  <servlet>
+      <servlet-name>track</servlet-name>
+      <servlet-class>com.google.appengine.demos.comments.server.TrackServlet</servlet-class>
+  </servlet>
+  <servlet-mapping>
+      <servlet-name>track</servlet-name>
+      <url-pattern>/track/*</url-pattern>
+  </servlet-mapping>
+
   <welcome-file-list>
       <welcome-file>listcomments.jsp</welcome-file>
   </welcome-file-list>
