@@ -40,22 +40,39 @@ public class CommentServlet extends HttpServlet {
   public void doPost(HttpServletRequest req, HttpServletResponse resp)
               throws IOException {
 
-    String userID = req.getParameter("userID");
-    String commenterName = req.getParameter("commenterName");
-    if (commenterName.equals("")) {
-      commenterName = "Anonymous";
+    Message msg;
+    // String userID = req.getParameter("userID");
+    String pathInfo = req.getPathInfo();
+    if (pathInfo == null) {
+      msg = new Message("create_comment", "ERROR", "No user id provided.");
+      resp.setContentType("application/json");
+      resp.getWriter().println(msg.toJson());
+      return;
     }
-    Key userCommentsKey = KeyFactory.createKey("Comment", userID);
-    String content = req.getParameter("content");
-    Date date = new Date();
-    Entity comment = new Entity("Comment", userCommentsKey);
-    comment.setProperty("commenter_name", commenterName);
-    comment.setProperty("date", date);
-    comment.setProperty("content", content);
+    try {
+      String[] pathParts = pathInfo.split("/");
+      String userID = pathParts[1];
+      LOG.info("got user id: " + userID);
+      String commenterName = req.getParameter("commenterName");
+      if (commenterName.equals("")) {
+        commenterName = "Anonymous";
+      }
+      Key userCommentsKey = KeyFactory.createKey("Comment", userID);
+      String content = req.getParameter("content");
+      Date date = new Date();
+      Entity comment = new Entity("Comment", userCommentsKey);
+      comment.setProperty("commenter_name", commenterName);
+      comment.setProperty("date", date);
+      // TODO - truncate at 500 chars
+      comment.setProperty("content", content);
 
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    datastore.put(comment);
-    Message msg = new Message("create_comment", "OK", "OK");
+      DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+      datastore.put(comment);
+      msg = new Message("create_comment", "OK", "OK");
+    }
+    catch (Exception e) {
+      msg = new Message("create_comment", "ERROR", e.getMessage());
+    }
     resp.setContentType("application/json");
     resp.getWriter().println(msg.toJson());
   }
@@ -64,16 +81,33 @@ public class CommentServlet extends HttpServlet {
   public void doGet(HttpServletRequest req, HttpServletResponse resp)
               throws IOException {
 
-    String pathInfo = req.getPathInfo();
-    // TODO: error checking
-    String[] pathParts = pathInfo.split("/");
-    String userID = pathParts[1];
-    String which = pathParts[2];
-    LOG.info("got user id: " + userID + ", which " + which);
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     Message msg;
+    String pathInfo = req.getPathInfo();
+    if (pathInfo == null) {
+      msg = new Message("list_comments", "ERROR", "Unsupported: no user id.");
+      resp.setContentType("application/json");
+      resp.getWriter().println(msg.toJson());
+      return;
+    }
+    String[] pathParts = pathInfo.split("/");
+    if (pathParts.length < 2) {
+      msg = new Message("list_comments", "ERROR", "Unsupported: no user id.");
+      resp.setContentType("application/json");
+      resp.getWriter().println(msg.toJson());
+      return;
+    }
+    String userID = pathParts[1];
+    String whichComments;
+    if (pathParts.length == 2) {   // default to 'all'
+      whichComments = "all";
+    }
+    else {
+      whichComments = pathParts[2];
+    }
+    LOG.info("got user id: " + userID + ", whichComments " + whichComments);
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-    if (which.equalsIgnoreCase("all")) {  // return all comments for that user id.
+    if (whichComments.equalsIgnoreCase("all")) {  // return all comments for that user id.
       try {
         Key userIDKey = KeyFactory.createKey("Comment", userID);
         Query query = new Query("Comment", userIDKey).addSort("date", Query.SortDirection.DESCENDING);
@@ -94,9 +128,9 @@ public class CommentServlet extends HttpServlet {
       resp.setContentType("application/json");
       resp.getWriter().println(msg.toJson());
     }
-    else if (! which.trim().equalsIgnoreCase("")) {  // treat as indiv. ID
+    else if (! whichComments.trim().equalsIgnoreCase("")) {  // treat as indiv. ID
       try {
-        long cid = Long.parseLong(which);
+        long cid = Long.parseLong(whichComments);
         LOG.info("cid is: " + cid);
         Key k = new KeyFactory.Builder("Comment", userID)
                               .addChild("Comment", cid)

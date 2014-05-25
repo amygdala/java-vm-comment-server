@@ -22,7 +22,7 @@
 <%
     String userID = request.getParameter("userID");
     if (userID == null) {
-        userID = "Bob";
+        userID = "userbob";
     }
     pageContext.setAttribute("userID", userID);
 
@@ -61,11 +61,11 @@
     }
 %>
 
-    <form action="/comment" method="post">
+    <form action="/comment/${fn:escapeXml(userID)}" method="post">
       <div><textarea name="content" rows="3" cols="60"></textarea></div>
       <div>Commenter name: <input type="text" name="commenterName" /></div>
       <div><input type="submit" value="Post A Comment" /></div>
-      <input type="hidden" name="userID" value="${fn:escapeXml(userID)}"/>
+      <!-- <input type="hidden" name="userID" value="${fn:escapeXml(userID)}"/> -->
     </form>
 
     <form action="/listcomments.jsp" method="get">
