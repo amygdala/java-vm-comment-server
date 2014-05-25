@@ -44,7 +44,8 @@ public class CommentServlet extends HttpServlet {
     // String userID = req.getParameter("userID");
     String pathInfo = req.getPathInfo();
     if (pathInfo == null) {
-      msg = new Message("create_comment", "ERROR", "No user id provided.");
+      msg = new Message(Message.MessageType.CREATE_COMMENT, Message.MessageStatus.ERROR,
+        "No user id provided.");
       resp.setContentType("application/json");
       resp.getWriter().println(msg.toJson());
       return;
@@ -68,10 +69,12 @@ public class CommentServlet extends HttpServlet {
 
       DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
       datastore.put(comment);
-      msg = new Message("create_comment", "OK", "OK");
+      msg = new Message(Message.MessageType.CREATE_COMMENT, Message.MessageStatus.OK,
+        "OK");
     }
     catch (Exception e) {
-      msg = new Message("create_comment", "ERROR", e.getMessage());
+      msg = new Message(Message.MessageType.CREATE_COMMENT, Message.MessageStatus.ERROR,
+        e.getMessage());
     }
     resp.setContentType("application/json");
     resp.getWriter().println(msg.toJson());
@@ -84,14 +87,16 @@ public class CommentServlet extends HttpServlet {
     Message msg;
     String pathInfo = req.getPathInfo();
     if (pathInfo == null) {
-      msg = new Message("list_comments", "ERROR", "Unsupported: no user id.");
+      msg = new Message(Message.MessageType.LIST_COMMENTS, Message.MessageStatus.ERROR,
+        "Unsupported: no user id.");
       resp.setContentType("application/json");
       resp.getWriter().println(msg.toJson());
       return;
     }
     String[] pathParts = pathInfo.split("/");
     if (pathParts.length < 2) {
-      msg = new Message("list_comments", "ERROR", "Unsupported: no user id.");
+      msg = new Message(Message.MessageType.LIST_COMMENTS, Message.MessageStatus.ERROR,
+        "Unsupported: no user id.");
       resp.setContentType("application/json");
       resp.getWriter().println(msg.toJson());
       return;
@@ -120,15 +125,17 @@ public class CommentServlet extends HttpServlet {
         }
         String commentsJson = GSON.toJson(commentlist);
         LOG.info("Comments: " + commentsJson);
-        msg = new Message("list_comments", "OK", commentsJson);
+        msg = new Message(Message.MessageType.LIST_COMMENTS, Message.MessageStatus.OK,
+          commentsJson);
       }
       catch (Exception e) {
-        msg = new Message("list_comments", "ERROR", e.getMessage());
+        msg = new Message(Message.MessageType.LIST_COMMENTS, Message.MessageStatus.ERROR,
+          e.getMessage());
       }
       resp.setContentType("application/json");
       resp.getWriter().println(msg.toJson());
     }
-    else if (! whichComments.trim().equalsIgnoreCase("")) {  // treat as indiv. ID
+    else if (! whichComments.trim().equalsIgnoreCase("")) {  // treat as indiv. ID request
       try {
         long cid = Long.parseLong(whichComments);
         LOG.info("cid is: " + cid);
@@ -140,13 +147,16 @@ public class CommentServlet extends HttpServlet {
         CommentMessage comment = CommentMessage.fromEntity(userID, c);
         String commentsJson = GSON.toJson(comment);
         LOG.info("Comment: " + commentsJson);
-        msg = new Message("comment", "OK", commentsJson);
+        msg = new Message(Message.MessageType.COMMENT, Message.MessageStatus.OK,
+          commentsJson);
       }
       catch (EntityNotFoundException e) {
-        msg = new Message("comment", "ERROR", "Entity not found.");
+        msg = new Message(Message.MessageType.COMMENT, Message.MessageStatus.ERROR,
+          "Entity not found.");
       }
       catch (Exception e2) {
-        msg = new Message("comment", "ERROR", e2.getMessage());
+        msg = new Message(Message.MessageType.COMMENT, Message.MessageStatus.ERROR,
+          e2.getMessage());
       }
       resp.setContentType("application/json");
       resp.getWriter().println(msg.toJson());

@@ -24,24 +24,34 @@ import com.google.gson.GsonBuilder;
  */
 public class Message {
 
-  private String type;
-  private String status;
+  public enum MessageType {
+    CREATE_COMMENT,
+    LIST_COMMENTS,
+    COMMENT
+  }
+
+  public enum MessageStatus {
+    OK,
+    ERROR
+  }
+
+  private MessageType type;
+  private MessageStatus status;
   private String message;
 
   private static final Gson GSON = new GsonBuilder().disableHtmlEscaping().create();
 
-  public Message(String type, String status, String message) {
+  public Message(MessageType type, MessageStatus status, String message) {
     this.type = type;
     this.status = status;
     this.message = message;
   }
 
-  // do we need these?
-  public String getType() {
+  public MessageType getType() {
     return type;
   }
 
-  public String getStatus() {
+  public MessageStatus getStatus() {
     return status;
   }
 
